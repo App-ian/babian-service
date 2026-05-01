@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Babian.Domain\Babian.Domain.csproj" />
+    <ProjectReference Include="..\..\Babian.Common\Babian.Common.csproj" />
+    <ProjectReference Include="..\Babian.BusinessLayers.Drinks\Babian.BusinessLayers.Drinks.csproj" />
+    <ProjectReference Include="..\Babian.BusinessLayers.MarketEngine\Babian.BusinessLayers.MarketEngine.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.1" />
+    <PackageReference Include="MediatR" Version="14.1.0" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+</Project>

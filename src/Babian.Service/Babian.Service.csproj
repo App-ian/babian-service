@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MediatR" Version="14.1.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.5" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.0">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\BusinessLayers\Babian.BusinessLayers.Drinks\Babian.BusinessLayers.Drinks.csproj" />
+    <ProjectReference Include="..\BusinessLayers\Babian.BusinessLayers.GlobalDrinks\Babian.BusinessLayers.GlobalDrinks.csproj" />
+    <ProjectReference Include="..\BusinessLayers\Babian.BusinessLayers.MarketConfigs\Babian.BusinessLayers.MarketConfigs.csproj" />
+    <ProjectReference Include="..\BusinessLayers\Babian.BusinessLayers.MarketEngine\Babian.BusinessLayers.MarketEngine.csproj" />
+    <ProjectReference Include="..\BusinessLayers\Babian.BusinessLayers.MarketEvents\Babian.BusinessLayers.MarketEvents.csproj" />
+    <ProjectReference Include="..\BusinessLayers\Babian.BusinessLayers.MarketSessions\Babian.BusinessLayers.MarketSessions.csproj" />
+    <ProjectReference Include="..\BusinessLayers\Babian.BusinessLayers.Orders\Babian.BusinessLayers.Orders.csproj" />
+    <ProjectReference Include="..\BusinessLayers\Babian.BusinessLayers.PriceHistory\Babian.BusinessLayers.PriceHistory.csproj" />
+    <ProjectReference Include="..\BusinessLayers\Babian.BusinessLayers.Profiles\Babian.BusinessLayers.Profiles.csproj" />
+    <ProjectReference Include="..\Babian.Infrastructure.Persistence\Babian.Infrastructure.Persistence.csproj" />
+    <ProjectReference Include="..\Babian.Infrastructure.Services\Babian.Infrastructure.Services.csproj" />
+  </ItemGroup>
+
+</Project>

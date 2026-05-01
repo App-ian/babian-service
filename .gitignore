@@ -1,0 +1,18 @@
+# Build outputs
+bin/
+obj/
+*.user
+*.suo
+.vs/
+TestResults/
+
+# Local config overrides
+appsettings.*.local.json
+
+# IDE
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db

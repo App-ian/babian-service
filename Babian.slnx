@@ -1,0 +1,38 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Babian.Common/Babian.Common.csproj" />
+    <Project Path="src/Babian.Domain/Babian.Domain.csproj" />
+    <Project Path="src/Babian.Infrastructure.Persistence/Babian.Infrastructure.Persistence.csproj" />
+    <Project Path="src/Babian.Infrastructure.Services/Babian.Infrastructure.Services.csproj" />
+    <Project Path="src/Babian.Service/Babian.Service.csproj" />
+  </Folder>
+  <Folder Name="/src/BusinessLayers/">
+    <Project Path="src/BusinessLayers/Babian.BusinessLayers.Drinks/Babian.BusinessLayers.Drinks.csproj" />
+    <Project Path="src/BusinessLayers/Babian.BusinessLayers.GlobalDrinks/Babian.BusinessLayers.GlobalDrinks.csproj" />
+    <Project Path="src/BusinessLayers/Babian.BusinessLayers.MarketConfigs/Babian.BusinessLayers.MarketConfigs.csproj" />
+    <Project Path="src/BusinessLayers/Babian.BusinessLayers.MarketEngine/Babian.BusinessLayers.MarketEngine.csproj" />
+    <Project Path="src/BusinessLayers/Babian.BusinessLayers.MarketEvents/Babian.BusinessLayers.MarketEvents.csproj" />
+    <Project Path="src/BusinessLayers/Babian.BusinessLayers.MarketSessions/Babian.BusinessLayers.MarketSessions.csproj" />
+    <Project Path="src/BusinessLayers/Babian.BusinessLayers.Orders/Babian.BusinessLayers.Orders.csproj" />
+    <Project Path="src/BusinessLayers/Babian.BusinessLayers.PriceHistory/Babian.BusinessLayers.PriceHistory.csproj" />
+    <Project Path="src/BusinessLayers/Babian.BusinessLayers.Profiles/Babian.BusinessLayers.Profiles.csproj" />
+  </Folder>
+  <Folder Name="/src/Tests/" />
+  <Folder Name="/src/Tests/Integration/">
+    <Project Path="src/Tests/Integration/Babian.IntegrationTests/Babian.IntegrationTests.csproj" />
+  </Folder>
+  <Folder Name="/src/Tests/Unit/">
+    <Project Path="src/Tests/Unit/Babian.BusinessLayers.Drinks.UnitTests/Babian.BusinessLayers.Drinks.UnitTests.csproj" />
+    <Project Path="src/Tests/Unit/Babian.BusinessLayers.GlobalDrinks.UnitTests/Babian.BusinessLayers.GlobalDrinks.UnitTests.csproj" />
+    <Project Path="src/Tests/Unit/Babian.BusinessLayers.MarketConfigs.UnitTests/Babian.BusinessLayers.MarketConfigs.UnitTests.csproj" />
+    <Project Path="src/Tests/Unit/Babian.BusinessLayers.MarketEngine.UnitTests/Babian.BusinessLayers.MarketEngine.UnitTests.csproj" />
+    <Project Path="src/Tests/Unit/Babian.BusinessLayers.MarketEvents.UnitTests/Babian.BusinessLayers.MarketEvents.UnitTests.csproj" />
+    <Project Path="src/Tests/Unit/Babian.BusinessLayers.MarketSessions.UnitTests/Babian.BusinessLayers.MarketSessions.UnitTests.csproj" />
+    <Project Path="src/Tests/Unit/Babian.BusinessLayers.Orders.UnitTests/Babian.BusinessLayers.Orders.UnitTests.csproj" />
+    <Project Path="src/Tests/Unit/Babian.BusinessLayers.PriceHistory.UnitTests/Babian.BusinessLayers.PriceHistory.UnitTests.csproj" />
+    <Project Path="src/Tests/Unit/Babian.BusinessLayers.Profiles.UnitTests/Babian.BusinessLayers.Profiles.UnitTests.csproj" />
+    <Project Path="src/Tests/Unit/Babian.Common.UnitTests/Babian.Common.UnitTests.csproj" />
+    <Project Path="src/Tests/Unit/Babian.Domain.UnitTests/Babian.Domain.UnitTests.csproj" />
+    <Project Path="src/Tests/Unit/Babian.Service.UnitTests/Babian.Service.UnitTests.csproj" />
+  </Folder>
+</Solution>

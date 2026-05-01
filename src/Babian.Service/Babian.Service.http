@@ -1,0 +1,6 @@
+@Babian.Service_HostAddress = http://localhost:5057
+
+GET {{Babian.Service_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
