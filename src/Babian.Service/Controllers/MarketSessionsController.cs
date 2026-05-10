@@ -10,10 +10,9 @@ using System.Security.Claims;
 
 namespace Babian.Service.Controllers;
 
-[Authorize]
 [ApiController]
 [Route("api/market-sessions")]
-public class MarketSessionsController : ControllerBase
+public class MarketSessionsController : AuthorizedControllerBase
 {
     private readonly IMediator _mediator;
 
@@ -25,34 +24,27 @@ public class MarketSessionsController : ControllerBase
     [HttpPost("start")]
     public async Task<ActionResult<Guid>> Start(StartMarketSessionCommand command)
     {
-        var currentUserId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-        var commandWithUserId = command with { OwnerId = currentUserId };
-        
-        var result = await _mediator.Send(commandWithUserId);
+        var result = await _mediator.Send(command with { OwnerId = CurrentUserId });
         return Ok(result);
     }
 
     [HttpPost("stop")]
     public async Task<ActionResult<bool>> Stop(StopMarketSessionCommand command)
     {
-        var currentUserId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-        var commandWithUserId = command with { OwnerId = currentUserId };
-        
-        var result = await _mediator.Send(commandWithUserId);
+        var result = await _mediator.Send(command with { OwnerId = CurrentUserId });
         return Ok(result);
     }
 
     [HttpGet("active")]
-    public async Task<IActionResult> GetActive()
+    public async Task<ActionResult<MarketSessionDto>> GetActive()
     {
-        var currentUserId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-        var session = await _mediator.Send(new GetActiveSessionQuery(currentUserId));
+        var session = await _mediator.Send(new GetActiveSessionQuery(CurrentUserId));
         return session != null ? Ok(session) : NotFound();
     }
 
     [AllowAnonymous]
     [HttpGet("public/{barId}")]
-    public async Task<IActionResult> GetPublicActive(Guid barId)
+    public async Task<ActionResult<MarketSessionDto>> GetPublicActive(Guid barId)
     {
         var session = await _mediator.Send(new GetActiveSessionQuery(barId));
         return session != null ? Ok(session) : NotFound();

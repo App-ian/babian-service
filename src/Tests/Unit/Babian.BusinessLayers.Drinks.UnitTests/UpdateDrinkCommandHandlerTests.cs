@@ -1,6 +1,7 @@
 using Babian.BusinessLayers.Drinks.Features.UpdateDrink;
 using Babian.Domain.Entities;
 using Babian.Domain.Interfaces;
+using Babian.Domain.Exceptions;
 using FluentAssertions;
 using Moq;
 
@@ -36,10 +37,7 @@ public class UpdateDrinkCommandHandlerTests
         BarmanId: barmanId,
         BasePrice: 5m,
         MinPrice: 2m,
-        MaxPrice: 10m,
-        ImageUrl: null,
-        Category: "Soft",
-        Plu: null
+        MaxPrice: 10m
     );
 
     // ─── Not found ────────────────────────────────────────────────────────────
@@ -58,19 +56,6 @@ public class UpdateDrinkCommandHandlerTests
 
     // ─── Validations ─────────────────────────────────────────────────────────
 
-    [Fact]
-    public async Task Handle_WhenCategoryEmpty_ThrowsException()
-    {
-        var (drinkId, barmanId) = (Guid.NewGuid(), Guid.NewGuid());
-        var drink = MakeDrink(drinkId, barmanId);
-        _repoMock.Setup(r => r.GetByOwnerIdAsync(barmanId, It.IsAny<CancellationToken>()))
-                 .ReturnsAsync([drink]);
-
-        var cmd = ValidCommand(drinkId, barmanId) with { Category = "" };
-        var act = () => _sut.Handle(cmd, CancellationToken.None);
-
-        await act.Should().ThrowAsync<Exception>().WithMessage("*catégorie*");
-    }
 
     [Fact]
     public async Task Handle_WhenMinPriceZero_ThrowsException()
@@ -83,7 +68,7 @@ public class UpdateDrinkCommandHandlerTests
         var cmd = ValidCommand(drinkId, barmanId) with { MinPrice = 0m };
         var act = () => _sut.Handle(cmd, CancellationToken.None);
 
-        await act.Should().ThrowAsync<Exception>().WithMessage("*supérieurs à 0*");
+        await act.Should().ThrowAsync<ValidationException>().WithMessage("*supérieurs à 0*");
     }
 
     [Fact]
@@ -97,7 +82,7 @@ public class UpdateDrinkCommandHandlerTests
         var cmd = ValidCommand(drinkId, barmanId) with { MaxPrice = 2m, MinPrice = 2m };
         var act = () => _sut.Handle(cmd, CancellationToken.None);
 
-        await act.Should().ThrowAsync<Exception>().WithMessage("*maximum doit être supérieur*");
+        await act.Should().ThrowAsync<ValidationException>().WithMessage("*maximum doit être supérieur*");
     }
 
     [Fact]
@@ -111,7 +96,7 @@ public class UpdateDrinkCommandHandlerTests
         var cmd = ValidCommand(drinkId, barmanId) with { BasePrice = 1m, MinPrice = 2m, MaxPrice = 10m };
         var act = () => _sut.Handle(cmd, CancellationToken.None);
 
-        await act.Should().ThrowAsync<Exception>().WithMessage("*compris entre*");
+        await act.Should().ThrowAsync<ValidationException>().WithMessage("*compris entre*");
     }
 
     [Fact]
@@ -125,25 +110,9 @@ public class UpdateDrinkCommandHandlerTests
         var cmd = ValidCommand(drinkId, barmanId) with { BasePrice = 150m, MinPrice = 1m, MaxPrice = 250m };
         var act = () => _sut.Handle(cmd, CancellationToken.None);
 
-        await act.Should().ThrowAsync<Exception>().WithMessage("*200€*");
+        await act.Should().ThrowAsync<ValidationException>().WithMessage("*200€*");
     }
 
-    [Fact]
-    public async Task Handle_WhenPluAlreadyUsedByAnotherDrink_ThrowsException()
-    {
-        var (drinkId, barmanId) = (Guid.NewGuid(), Guid.NewGuid());
-        var drink = MakeDrink(drinkId, barmanId);
-        var otherDrink = MakeDrink(Guid.NewGuid(), barmanId);
-        otherDrink.Plu = "PLU001";
-
-        _repoMock.Setup(r => r.GetByOwnerIdAsync(barmanId, It.IsAny<CancellationToken>()))
-                 .ReturnsAsync([drink, otherDrink]);
-
-        var cmd = ValidCommand(drinkId, barmanId) with { Plu = "PLU001" };
-        var act = () => _sut.Handle(cmd, CancellationToken.None);
-
-        await act.Should().ThrowAsync<Exception>().WithMessage("*PLU*déjà utilisé*");
-    }
 
     // ─── Succès ───────────────────────────────────────────────────────────────
 
@@ -157,10 +126,10 @@ public class UpdateDrinkCommandHandlerTests
         _repoMock.Setup(r => r.UpdateAsync(It.IsAny<Drink>(), It.IsAny<CancellationToken>()))
                  .Returns(Task.CompletedTask);
 
-        var cmd = ValidCommand(drinkId, barmanId) with { Category = "Bière", BasePrice = 6m, MinPrice = 3m, MaxPrice = 12m };
+        var cmd = ValidCommand(drinkId, barmanId) with { BasePrice = 6m, MinPrice = 3m, MaxPrice = 12m };
         var result = await _sut.Handle(cmd, CancellationToken.None);
 
         result.Should().BeTrue();
-        _repoMock.Verify(r => r.UpdateAsync(It.Is<Drink>(d => d.Category == "Bière" && d.BasePrice == 6m), It.IsAny<CancellationToken>()), Times.Once);
+        _repoMock.Verify(r => r.UpdateAsync(It.Is<Drink>(d => d.BasePrice == 6m && d.MinPrice == 3m && d.MaxPrice == 12m), It.IsAny<CancellationToken>()), Times.Once);
     }
 }

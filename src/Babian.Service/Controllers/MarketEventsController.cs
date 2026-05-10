@@ -11,14 +11,12 @@ using Babian.BusinessLayers.MarketEvents.Features.UpdateEvent;
 using Babian.BusinessLayers.MarketEvents.Features.CloseEvent;
 using Babian.BusinessLayers.MarketEngine.Features.UpdatePrices;
 using Microsoft.AspNetCore.Authorization;
-using System.Security.Claims;
 
 namespace Babian.Service.Controllers;
 
-[Authorize]
 [ApiController]
 [Route("api/market-events")]
-public class MarketEventsController : ControllerBase
+public class MarketEventsController : AuthorizedControllerBase
 {
     private readonly IMediator _mediator;
 
@@ -30,16 +28,14 @@ public class MarketEventsController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
-        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-        var events = await _mediator.Send(new GetMarketEventsQuery(userId));
+        var events = await _mediator.Send(new GetMarketEventsQuery(CurrentUserId));
         return Ok(events);
     }
 
     [HttpGet("active")]
     public async Task<IActionResult> GetActive()
     {
-        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-        var events = await _mediator.Send(new GetActiveMarketEventsQuery(userId));
+        var events = await _mediator.Send(new GetActiveMarketEventsQuery(CurrentUserId));
         return Ok(events);
     }
 
@@ -54,16 +50,14 @@ public class MarketEventsController : ControllerBase
     [HttpGet("templates")]
     public async Task<IActionResult> GetTemplates()
     {
-        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-        var events = await _mediator.Send(new GetTemplateMarketEventsQuery(userId));
+        var events = await _mediator.Send(new GetTemplateMarketEventsQuery(CurrentUserId));
         return Ok(events);
     }
 
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] CreateMarketEventCommand command)
     {
-        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-        var commandWithUid = command with { BarmanId = userId };
+        var commandWithUid = command with { BarmanId = CurrentUserId };
         var result = await _mediator.Send(commandWithUid);
         return Ok(result);
     }
@@ -71,11 +65,8 @@ public class MarketEventsController : ControllerBase
     [HttpPut("{eventId}")]
     public async Task<IActionResult> Update(Guid eventId, [FromBody] UpdateMarketEventCommand command)
     {
-        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-        
-        // On force l'ID de la route et l'ID utilisateur du token
         command.Id = eventId;
-        command.BarmanId = userId;
+        command.BarmanId = CurrentUserId;
         
         var success = await _mediator.Send(command);
         return success ? Ok() : NotFound();
@@ -84,26 +75,22 @@ public class MarketEventsController : ControllerBase
     [HttpDelete("{eventId}")]
     public async Task<IActionResult> Delete(Guid eventId)
     {
-        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-        var success = await _mediator.Send(new DeleteMarketEventCommand(eventId, userId));
+        var success = await _mediator.Send(new DeleteMarketEventCommand(eventId, CurrentUserId));
         return success ? Ok() : NotFound();
     }
 
     [HttpPost("{eventId}/activate")]
     public async Task<IActionResult> Activate(Guid eventId, [FromBody] ActivateEventRequest request)
     {
-        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-        var command = new ActivateMarketEventCommand(eventId, request.DurationMinutes, userId);
+        var command = new ActivateMarketEventCommand(eventId, request.DurationMinutes, CurrentUserId);
         var result = await _mediator.Send(command);
-
         return Ok(result);
     }
 
     [HttpPost("{eventId}/close")]
     public async Task<IActionResult> Close(Guid eventId)
     {
-        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-        var success = await _mediator.Send(new CloseMarketEventCommand(eventId, userId));
+        var success = await _mediator.Send(new CloseMarketEventCommand(eventId, CurrentUserId));
         return success ? Ok() : NotFound();
     }
 }

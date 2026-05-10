@@ -8,14 +8,12 @@ using Babian.BusinessLayers.Drinks.Features.UpdateDrink;
 using Babian.BusinessLayers.Drinks.Features.DeactivateDrink;
 using Babian.BusinessLayers.Drinks.Features.UpdatePrice;
 using Microsoft.AspNetCore.Authorization;
-using System.Security.Claims;
 
 namespace Babian.Service.Controllers;
 
-[Authorize]
 [ApiController]
 [Route("api/drinks")]
-public class DrinksController : ControllerBase
+public class DrinksController : AuthorizedControllerBase
 {
     private readonly IMediator _mediator;
 
@@ -32,9 +30,7 @@ public class DrinksController : ControllerBase
     [HttpPost("activate")]
     public async Task<IActionResult> Activate([FromBody] ActivateDrinkFromGlobalCommand command)
     {
-        var currentUserId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-        var commandWithUserId = command with { BarmanId = currentUserId };
-        
+        var commandWithUserId = command with { BarmanId = CurrentUserId };
         var resultId = await _mediator.Send(commandWithUserId);
         return Ok(new { DrinkId = resultId });
     }
@@ -42,23 +38,19 @@ public class DrinksController : ControllerBase
     /// <summary>
     /// Récupère la liste des boissons activées pour un barman.
     /// </summary>
-    /// <param name="ownerId">Id unique du barman</param>
     /// <returns>Liste des boissons avec leurs prix actuels</returns>
     [HttpGet]
-    public async Task<IActionResult> GetByOwner()
+    public async Task<ActionResult<IEnumerable<DrinkDto>>> GetByOwner()
     {
-        var currentUserId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-        var query = new GetDrinksByOwnerQuery(currentUserId);
-        var drinks = await _mediator.Send(query);
+        var drinks = await _mediator.Send(new GetDrinksByOwnerQuery(CurrentUserId));
         return Ok(drinks);
     }
 
     [AllowAnonymous]
     [HttpGet("public/{barId}")]
-    public async Task<IActionResult> GetPublicByOwner(Guid barId)
+    public async Task<ActionResult<IEnumerable<DrinkDto>>> GetPublicByOwner(Guid barId)
     {
-        var query = new GetDrinksByOwnerQuery(barId);
-        var drinks = await _mediator.Send(query);
+        var drinks = await _mediator.Send(new GetDrinksByOwnerQuery(barId));
         return Ok(drinks);
     }
 
@@ -68,9 +60,7 @@ public class DrinksController : ControllerBase
     [HttpPut("{drinkId}")]
     public async Task<IActionResult> Update(Guid drinkId, [FromBody] UpdateDrinkCommand command)
     {
-        var currentUserId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-        var commandWithIds = command with { DrinkId = drinkId, BarmanId = currentUserId };
-        
+        var commandWithIds = command with { DrinkId = drinkId, BarmanId = CurrentUserId };
         var success = await _mediator.Send(commandWithIds);
         return success ? Ok() : NotFound();
     }
@@ -81,10 +71,7 @@ public class DrinksController : ControllerBase
     [HttpDelete("{drinkId}")]
     public async Task<IActionResult> Deactivate(Guid drinkId)
     {
-        var currentUserId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-        var command = new DeactivateDrinkCommand(drinkId, currentUserId);
-        
-        var success = await _mediator.Send(command);
+        var success = await _mediator.Send(new DeactivateDrinkCommand(drinkId, CurrentUserId));
         return success ? Ok() : NotFound();
     }
 
@@ -94,10 +81,7 @@ public class DrinksController : ControllerBase
     [HttpPost("{drinkId}/price")]
     public async Task<IActionResult> UpdatePrice(Guid drinkId, [FromBody] UpdatePriceRequest request)
     {
-        var currentUserId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-        var command = new UpdateDrinkPriceCommand(drinkId, currentUserId, request.Price);
-        
-        var success = await _mediator.Send(command);
+        var success = await _mediator.Send(new UpdateDrinkPriceCommand(drinkId, CurrentUserId, request.Price));
         return success ? Ok() : NotFound();
     }
 }

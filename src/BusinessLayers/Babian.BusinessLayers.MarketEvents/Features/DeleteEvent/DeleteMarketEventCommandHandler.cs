@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Babian.Domain.Exceptions;
 using Babian.Infrastructure.Persistence;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -20,12 +21,13 @@ public class DeleteMarketEventCommandHandler : IRequestHandler<DeleteMarketEvent
     public async Task<bool> Handle(DeleteMarketEventCommand request, CancellationToken cancellationToken)
     {
         var marketEvent = await _context.MarketEvents
-            .FirstOrDefaultAsync(e => e.Id == request.EventId && e.BarmanId == request.BarmanId, cancellationToken);
+            .FirstOrDefaultAsync(e => e.Id == request.EventId, cancellationToken);
 
         if (marketEvent == null)
-        {
-            return false;
-        }
+            throw new NotFoundException($"Événement {request.EventId} introuvable.");
+
+        if (marketEvent.BarmanId != request.BarmanId)
+            throw new ForbiddenException("Vous n'êtes pas propriétaire de cet événement.");
 
         _context.MarketEvents.Remove(marketEvent);
         await _context.SaveChangesAsync(cancellationToken);

@@ -2,6 +2,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Babian.Domain.Interfaces;
+using Babian.Domain.Exceptions;
 using MediatR;
 
 namespace Babian.BusinessLayers.Drinks.Features.UpdateDrink;
@@ -17,26 +18,13 @@ public class UpdateDrinkCommandHandler : IRequestHandler<UpdateDrinkCommand, boo
 
     public async Task<bool> Handle(UpdateDrinkCommand request, CancellationToken cancellationToken)
     {
-        var drinks = await _drinkRepository.GetByOwnerIdAsync(request.BarmanId, cancellationToken);
-        var drink = drinks.Find(d => d.Id == request.DrinkId);
+        var drink = await _drinkRepository.GetByIdAsync(request.DrinkId, cancellationToken);
 
         if (drink == null)
-        {
-            return false;
-        }
+            throw new NotFoundException($"Boisson {request.DrinkId} introuvable.");
 
-        // 1. Business Validations
-        if (request.MinPrice <= 0 || request.BasePrice <= 0 || request.MaxPrice <= 0)
-            throw new Exception("Tous les prix doivent être supérieurs à 0.");
-
-        if (request.MaxPrice <= request.MinPrice)
-            throw new Exception("Le prix maximum doit être supérieur au prix minimum.");
-
-        if (request.BasePrice < request.MinPrice || request.BasePrice > request.MaxPrice)
-            throw new Exception("Le prix de base doit être compris entre le prix minimum et le prix maximum.");
-
-        if (request.MaxPrice > 200)
-            throw new Exception("Le prix maximum ne peut pas dépasser 200€ (seuil de sécurité).");
+        if (drink.OwnerId != request.BarmanId)
+            throw new ForbiddenException("Vous n'êtes pas propriétaire de cette boisson.");
 
         // 2. Update entity (Prices only)
         drink.BasePrice = request.BasePrice;

@@ -8,10 +8,9 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace Babian.Service.Controllers;
 
-[Authorize]
 [ApiController]
 [Route("api/global-drinks")]
-public class GlobalDrinksController : ControllerBase
+public class GlobalDrinksController : AuthorizedControllerBase
 {
     private readonly IMediator _mediator;
 
@@ -34,6 +33,7 @@ public class GlobalDrinksController : ControllerBase
     /// <summary>
     /// Ajoute une nouvelle boisson au référentiel public.
     /// </summary>
+    [Authorize(Roles = "SuperAdmin")]
     [HttpPost]
     public async Task<ActionResult<Guid>> Post([FromBody] Babian.BusinessLayers.GlobalDrinks.Features.AddGlobalDrink.AddGlobalDrinkCommand command)
     {
@@ -44,6 +44,7 @@ public class GlobalDrinksController : ControllerBase
     /// <summary>
     /// Met à jour une boisson du référentiel public.
     /// </summary>
+    [Authorize(Roles = "SuperAdmin")]
     [HttpPut("{id}")]
     public async Task<ActionResult> Put(Guid id, [FromBody] Babian.BusinessLayers.GlobalDrinks.Features.UpdateGlobalDrink.UpdateGlobalDrinkCommand command)
     {
@@ -59,6 +60,7 @@ public class GlobalDrinksController : ControllerBase
     /// <summary>
     /// Supprime une boisson du référentiel public (Hard Delete).
     /// </summary>
+    [Authorize(Roles = "SuperAdmin")]
     [HttpDelete("{id}")]
     public async Task<ActionResult> Delete(Guid id)
     {

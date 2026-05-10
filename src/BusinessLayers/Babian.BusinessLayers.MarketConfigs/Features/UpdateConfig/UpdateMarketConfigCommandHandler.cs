@@ -22,24 +22,8 @@ public class UpdateMarketConfigCommandHandler : IRequestHandler<UpdateMarketConf
         var existingConfig = await _repository.GetByBarmanIdAsync(request.BarmanId, cancellationToken);
         var now = DateTime.UtcNow;
 
-        // Validations
-        if (request.RankingGroups == null || !request.RankingGroups.Any())
-            throw new Exception("Au moins un groupe de classement est obligatoire.");
-
         var sortedGroups = request.RankingGroups.OrderBy(g => g.MaxRank).ToList();
         
-        // Check for duplicates and strict order
-        for (int i = 0; i < sortedGroups.Count; i++)
-        {
-            if (sortedGroups[i].Coefficient < -1 || sortedGroups[i].Coefficient > 1)
-                throw new Exception($"L'intensité du groupe '{sortedGroups[i].Name}' doit être comprise entre -1 et 1.");
-
-            if (i > 0 && sortedGroups[i].MaxRank <= sortedGroups[i - 1].MaxRank)
-                throw new Exception($"Les rangs doivent être strictement croissants. Le groupe '{sortedGroups[i].Name}' (Rang {sortedGroups[i].MaxRank}) entre en conflit avec le précédent.");
-        }
-
-        // Removed strict 999 check to allow more flexibility as requested by user feedback via front validation
-
         if (existingConfig == null)
         {
             var newConfig = new MarketConfig

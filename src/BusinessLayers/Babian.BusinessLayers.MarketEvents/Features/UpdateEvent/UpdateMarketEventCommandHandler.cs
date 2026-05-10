@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Babian.Domain.Entities;
 using Babian.Domain.Interfaces;
+using Babian.Domain.Exceptions;
 using MediatR;
 
 namespace Babian.BusinessLayers.MarketEvents.Features.UpdateEvent;
@@ -20,10 +21,11 @@ public class UpdateMarketEventCommandHandler : IRequestHandler<UpdateMarketEvent
     {
         var marketEvent = await _repository.GetByIdAsync(request.Id, cancellationToken);
         
-        if (marketEvent == null || marketEvent.BarmanId != request.BarmanId)
-        {
-            return false;
-        }
+        if (marketEvent == null)
+            throw new NotFoundException($"Événement {request.Id} introuvable.");
+
+        if (marketEvent.BarmanId != request.BarmanId)
+            throw new ForbiddenException("Vous n'êtes pas propriétaire de cet événement.");
 
         if (request.EndAt <= request.StartAt)
         {

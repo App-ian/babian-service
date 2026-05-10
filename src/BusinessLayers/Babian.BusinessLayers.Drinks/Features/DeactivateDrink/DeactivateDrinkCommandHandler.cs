@@ -2,6 +2,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Babian.Domain.Interfaces;
+using Babian.Domain.Exceptions;
 using MediatR;
 
 namespace Babian.BusinessLayers.Drinks.Features.DeactivateDrink;
@@ -17,13 +18,13 @@ public class DeactivateDrinkCommandHandler : IRequestHandler<DeactivateDrinkComm
 
     public async Task<bool> Handle(DeactivateDrinkCommand request, CancellationToken cancellationToken)
     {
-        var drinks = await _drinkRepository.GetByOwnerIdAsync(request.BarmanId, cancellationToken);
-        var drink = drinks.Find(d => d.Id == request.DrinkId);
+        var drink = await _drinkRepository.GetByIdAsync(request.DrinkId, cancellationToken);
 
         if (drink == null)
-        {
-            return false;
-        }
+            throw new NotFoundException($"Boisson {request.DrinkId} introuvable.");
+
+        if (drink.OwnerId != request.BarmanId)
+            throw new ForbiddenException("Vous n'êtes pas propriétaire de cette boisson.");
 
         drink.IsActive = false;
         await _drinkRepository.UpdateAsync(drink, cancellationToken);

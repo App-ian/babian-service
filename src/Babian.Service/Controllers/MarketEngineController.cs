@@ -10,10 +10,9 @@ using Babian.BusinessLayers.MarketEngine.Features.GetHistory;
 
 namespace Babian.Service.Controllers;
 
-[Authorize]
 [ApiController]
 [Route("api/market-engine")]
-public class MarketEngineController : ControllerBase
+public class MarketEngineController : AuthorizedControllerBase
 {
     private readonly IMediator _mediator;
     private readonly Babian.Domain.Interfaces.IMarketSimulationService _simulationService;
@@ -30,8 +29,7 @@ public class MarketEngineController : ControllerBase
     [HttpPost("cycle")]
     public async Task<ActionResult<bool>> TriggerCycle([FromQuery] bool force = false)
     {
-        var currentUserId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-        var result = await _mediator.Send(new UpdateMarketPricesCommand(currentUserId, true, force));
+        var result = await _mediator.Send(new UpdateMarketPricesCommand(CurrentUserId, true, force));
         return Ok(result);
     }
 

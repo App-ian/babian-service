@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Babian.Domain.Entities;
 using Babian.Domain.Interfaces;
+using Babian.Domain.Exceptions;
 using MediatR;
 
 namespace Babian.BusinessLayers.MarketEvents.Features.ActivateEvent;
@@ -28,13 +29,13 @@ public class ActivateMarketEventCommandHandler : IRequestHandler<ActivateMarketE
         var template = await _repository.GetByIdAsync(request.EventId, cancellationToken);
         
         if (template == null)
-            throw new Exception("Événement introuvable.");
+            throw new NotFoundException("Événement introuvable.");
 
         if (template.BarmanId != request.BarmanId)
-            throw new UnauthorizedAccessException("Non autorisé.");
+            throw new ForbiddenException("Vous n'êtes pas propriétaire de cet événement.");
 
         if (!template.IsTemplate)
-            throw new Exception("Cet événement n'est pas un modèle (template) et ne peut être activé ainsi.");
+            throw new ValidationException("Cet événement n'est pas un modèle (template) et ne peut être activé ainsi.");
 
         var activeSession = await _sessionRepository.GetActiveSessionAsync(request.BarmanId, cancellationToken);
         if (activeSession == null)

@@ -21,11 +21,6 @@ public class CreateMarketEventCommandHandler : IRequestHandler<CreateMarketEvent
 
     public async Task<MarketEvent> Handle(CreateMarketEventCommand request, CancellationToken cancellationToken)
     {
-        if (request.EndAt <= request.StartAt)
-        {
-            throw new ArgumentException("La date de fin doit être postérieure à la date de début.");
-        }
-
         Guid? sessionId = null;
         if (!request.IsTemplate)
         {

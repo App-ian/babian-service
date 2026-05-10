@@ -5,14 +5,12 @@ using Microsoft.AspNetCore.Mvc;
 using Babian.BusinessLayers.MarketConfigs.Features.UpdateConfig;
 using Babian.BusinessLayers.MarketConfigs.Features.GetConfig;
 using Microsoft.AspNetCore.Authorization;
-using System.Security.Claims;
 
 namespace Babian.Service.Controllers;
 
-[Authorize]
 [ApiController]
 [Route("api/market-configs")]
-public class MarketConfigsController : ControllerBase
+public class MarketConfigsController : AuthorizedControllerBase
 {
     private readonly IMediator _mediator;
 
@@ -27,9 +25,7 @@ public class MarketConfigsController : ControllerBase
     [HttpPut]
     public async Task<IActionResult> UpdateConfig([FromBody] UpdateMarketConfigCommand command)
     {
-        var currentUserId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-        var commandWithUserId = command with { BarmanId = currentUserId };
-        
+        var commandWithUserId = command with { BarmanId = CurrentUserId };
         var resultId = await _mediator.Send(commandWithUserId);
         return Ok(new { MarketConfigId = resultId });
     }
@@ -37,8 +33,7 @@ public class MarketConfigsController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> Get()
     {
-        var currentUserId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-        var config = await _mediator.Send(new GetMarketConfigQuery(currentUserId));
+        var config = await _mediator.Send(new GetMarketConfigQuery(CurrentUserId));
         return Ok(config);
     }
 

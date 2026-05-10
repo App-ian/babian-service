@@ -14,6 +14,7 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
+    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.1" />
   </ItemGroup>
 
   <ItemGroup>
@@ -28,6 +29,7 @@
     <ProjectReference Include="..\BusinessLayers\Babian.BusinessLayers.Profiles\Babian.BusinessLayers.Profiles.csproj" />
     <ProjectReference Include="..\Babian.Infrastructure.Persistence\Babian.Infrastructure.Persistence.csproj" />
     <ProjectReference Include="..\Babian.Infrastructure.Services\Babian.Infrastructure.Services.csproj" />
+    <ProjectReference Include="..\Babian.Common\Babian.Common.csproj" />
   </ItemGroup>
 
 </Project>

@@ -10,10 +10,9 @@ using System.Collections.Generic;
 
 namespace Babian.Service.Controllers;
 
-[Authorize]
 [ApiController]
 [Route("api/orders")]
-public class OrdersController : ControllerBase
+public class OrdersController : AuthorizedControllerBase
 {
     private readonly IMediator _mediator;
 
@@ -25,10 +24,7 @@ public class OrdersController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<Guid>> Add(AddOrderCommand command)
     {
-        var currentUserId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-        var commandWithUserId = command with { OwnerId = currentUserId };
-        
-        var result = await _mediator.Send(commandWithUserId);
+        var result = await _mediator.Send(command with { OwnerId = CurrentUserId });
         return Ok(result);
     }
 

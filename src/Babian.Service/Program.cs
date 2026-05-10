@@ -16,6 +16,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using Babian.Service.Middlewares;
+using FluentValidation;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -41,6 +43,10 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter(System.Text.Json.JsonNamingPolicy.SnakeCaseLower));
         options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
     });
+
+// Exception handling
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+builder.Services.AddProblemDetails();
 
 // Configure Swagger/OpenAPI (US 0.1)
 builder.Services.AddEndpointsApiExplorer();
@@ -123,9 +129,28 @@ builder.Services.AddScoped<IMarketEventRepository, MarketEventRepository>();
 // Infrastructure Services
 builder.Services.AddSingleton<IPriceCalculator, AsymptoticPriceCalculator>();
 builder.Services.AddScoped<IMarketSimulationService, MarketSimulationService>();
+builder.Services.AddScoped<IPriceRankingService, PriceRankingService>();
+builder.Services.AddScoped<IPriceCalculationService, PriceCalculationService>();
+builder.Services.AddScoped<IMarketEventApplier, MarketEventApplier>();
 
 // Configure MediatR across all business layer assemblies
-builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblies(
+builder.Services.AddMediatR(cfg => {
+    cfg.RegisterServicesFromAssemblies(
+        typeof(Program).Assembly,
+        typeof(StartMarketSessionCommand).Assembly,
+        typeof(AddOrderCommand).Assembly,
+        typeof(ActivateDrinkFromGlobalCommand).Assembly,
+        typeof(UpdateMarketConfigCommand).Assembly,
+        typeof(GetGlobalDrinksQuery).Assembly,
+        typeof(UpdateMarketPricesCommand).Assembly,
+        typeof(LoginUserQuery).Assembly,
+        typeof(GetMarketEventsQuery).Assembly
+    );
+    cfg.AddOpenBehavior(typeof(Babian.Common.Behaviors.ValidationBehavior<,>));
+});
+
+// FluentValidation
+builder.Services.AddValidatorsFromAssemblies(new[] {
     typeof(Program).Assembly,
     typeof(StartMarketSessionCommand).Assembly,
     typeof(AddOrderCommand).Assembly,
@@ -135,7 +160,10 @@ builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblies(
     typeof(UpdateMarketPricesCommand).Assembly,
     typeof(LoginUserQuery).Assembly,
     typeof(GetMarketEventsQuery).Assembly
-));
+});
+
+// Background Services
+builder.Services.AddHostedService<Babian.Service.Workers.MarketWorker>();
 
 var app = builder.Build();
 
@@ -146,6 +174,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseExceptionHandler();
 app.UseHttpsRedirection();
 app.UseCors("FrontendPolicy");
 app.UseAuthentication();
