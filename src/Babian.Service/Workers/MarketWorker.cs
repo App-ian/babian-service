@@ -43,22 +43,26 @@ public class MarketWorker : BackgroundService
 
                 if (expiredEvents.Any())
                 {
+                    var notificationService = scope.ServiceProvider.GetRequiredService<Babian.Domain.Interfaces.IMarketNotificationService>();
                     foreach (var ev in expiredEvents)
                     {
                         ev.Status = MarketEventStatus.Finished;
                         _logger.LogInformation("MarketWorker: Event {eventId} ({eventName}) finished.", ev.Id, ev.Name);
+                        await notificationService.NotifyEventAsync(ev.BarmanId, $"L'événement '{ev.Name}' est terminé.", new { ev.Id, ev.Status });
                     }
                     await dbContext.SaveChangesAsync(stoppingToken);
                 }
 
                 // 2. Auto-Cycle des Sessions
                 var activeSessions = await dbContext.MarketSessions
+                    .AsNoTracking()
                     .Where(s => s.IsActive)
                     .ToListAsync(stoppingToken);
 
                 foreach (var session in activeSessions)
                 {
                     var config = await dbContext.MarketConfigs
+                        .AsNoTracking()
                         .FirstOrDefaultAsync(c => c.BarmanId == session.OwnerId, stoppingToken);
 
                     if (config == null) continue;
@@ -76,6 +80,10 @@ public class MarketWorker : BackgroundService
                         await mediator.Send(new UpdateMarketPricesCommand(session.OwnerId, true, false), stoppingToken);
                     }
                 }
+            }
+            catch (Microsoft.EntityFrameworkCore.DbUpdateConcurrencyException)
+            {
+                _logger.LogWarning("MarketWorker: Concurrence détectée (une autre mise à jour est en cours). Le worker réessaiera au prochain cycle.");
             }
             catch (Exception ex)
             {

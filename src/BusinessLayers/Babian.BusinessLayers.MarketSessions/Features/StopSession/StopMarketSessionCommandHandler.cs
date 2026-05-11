@@ -11,11 +11,16 @@ public class StopMarketSessionCommandHandler : IRequestHandler<StopMarketSession
 {
     private readonly IMarketSessionRepository _sessionRepository;
     private readonly IMarketEventRepository _eventRepository;
+    private readonly IMarketNotificationService _notificationService;
 
-    public StopMarketSessionCommandHandler(IMarketSessionRepository sessionRepository, IMarketEventRepository eventRepository)
+    public StopMarketSessionCommandHandler(
+        IMarketSessionRepository sessionRepository, 
+        IMarketEventRepository eventRepository,
+        IMarketNotificationService notificationService)
     {
         _sessionRepository = sessionRepository;
         _eventRepository = eventRepository;
+        _notificationService = notificationService;
     }
 
     public async Task<bool> Handle(StopMarketSessionCommand request, CancellationToken cancellationToken)
@@ -48,6 +53,9 @@ public class StopMarketSessionCommandHandler : IRequestHandler<StopMarketSession
                 await _eventRepository.UpdateAsync(ev, cancellationToken);
             }
         }
+
+        // Notification SignalR
+        await _notificationService.NotifyEventAsync(activeSession.OwnerId, "La bourse est fermée.", new { Type = "MarketStopped" });
 
         return true;
     }

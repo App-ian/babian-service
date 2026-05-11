@@ -13,17 +13,20 @@ public class StartMarketSessionCommandHandler : IRequestHandler<StartMarketSessi
     private readonly IDrinkRepository _drinkRepository;
     private readonly IMarketEventRepository _eventRepository;
     private readonly IMarketConfigRepository _configRepository;
+    private readonly IMarketNotificationService _notificationService;
 
     public StartMarketSessionCommandHandler(
         IMarketSessionRepository sessionRepository,
         IDrinkRepository drinkRepository,
         IMarketEventRepository eventRepository,
-        IMarketConfigRepository configRepository)
+        IMarketConfigRepository configRepository,
+        IMarketNotificationService notificationService)
     {
         _sessionRepository = sessionRepository;
         _drinkRepository = drinkRepository;
         _eventRepository = eventRepository;
         _configRepository = configRepository;
+        _notificationService = notificationService;
     }
 
     public async Task<Guid> Handle(StartMarketSessionCommand request, CancellationToken cancellationToken)
@@ -59,6 +62,9 @@ public class StartMarketSessionCommandHandler : IRequestHandler<StartMarketSessi
         }
 
         await _sessionRepository.CreateAsync(newSession, cancellationToken);
+
+        // Notification SignalR pour mettre à jour les écrans publics (prévisualisation)
+        await _notificationService.NotifyEventAsync(request.OwnerId, "La bourse a démarré !", new { Type = "MarketStarted", SessionId = newSession.Id });
         
         // 4. Adopter les événements planifiés orphelins (MarketSessionId == null)
         // uniquement s'ils commencent pendant la durée prévue de la bourse

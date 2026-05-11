@@ -35,6 +35,14 @@ public class MarketSessionRepository : IMarketSessionRepository
     public async Task UpdateAsync(MarketSession session, CancellationToken cancellationToken)
     {
         _context.MarketSessions.Update(session);
-        await _context.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await _context.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            _context.Entry(session).State = EntityState.Detached;
+            throw;
+        }
     }
 }

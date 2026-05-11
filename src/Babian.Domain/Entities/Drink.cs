@@ -26,6 +26,8 @@ public class Drink
     public Guid GlobalDrinkId { get; set; }
     
     public DateTime CreatedAt { get; set; }
+    
+    public Guid RowVersion { get; set; } = Guid.NewGuid();
 
     // Navigation properties
     public GlobalDrink? GlobalDrink { get; set; }

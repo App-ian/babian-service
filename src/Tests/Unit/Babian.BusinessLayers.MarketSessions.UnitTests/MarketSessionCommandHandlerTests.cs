@@ -11,11 +11,19 @@ public class StartMarketSessionCommandHandlerTests
 {
     private readonly Mock<IMarketSessionRepository> _sessionRepoMock = new();
     private readonly Mock<IDrinkRepository> _drinkRepoMock = new();
+    private readonly Mock<IMarketEventRepository> _eventRepoMock = new();
+    private readonly Mock<IMarketConfigRepository> _configRepoMock = new();
+    private readonly Mock<IMarketNotificationService> _notifRepoMock = new();
     private readonly StartMarketSessionCommandHandler _sut;
 
     public StartMarketSessionCommandHandlerTests()
     {
-        _sut = new StartMarketSessionCommandHandler(_sessionRepoMock.Object, _drinkRepoMock.Object);
+        _sut = new StartMarketSessionCommandHandler(
+            _sessionRepoMock.Object, 
+            _drinkRepoMock.Object, 
+            _eventRepoMock.Object, 
+            _configRepoMock.Object,
+            _notifRepoMock.Object);
     }
 
     [Fact]
@@ -47,6 +55,12 @@ public class StartMarketSessionCommandHandlerTests
         _drinkRepoMock
             .Setup(r => r.GetByOwnerIdAsync(ownerId, It.IsAny<CancellationToken>()))
             .ReturnsAsync([]);
+        _eventRepoMock
+            .Setup(r => r.GetByBarmanIdAsync(ownerId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync([]);
+        _configRepoMock
+            .Setup(r => r.GetByBarmanIdAsync(ownerId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new MarketConfig());
         _sessionRepoMock
             .Setup(r => r.CreateAsync(It.IsAny<MarketSession>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((MarketSession s, CancellationToken _) => s);

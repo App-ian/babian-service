@@ -15,16 +15,18 @@ public class GlobalExceptionHandler : IExceptionHandler
 
     public async ValueTask<bool> TryHandleAsync(HttpContext httpContext, Exception exception, CancellationToken cancellationToken)
     {
-        _logger.LogError(exception, "Une exception non gérée s'est produite : {Message}", exception.Message);
-
+        int statusCode = StatusCodes.Status500InternalServerError;
         var problemDetails = new ProblemDetails
         {
-            Instance = httpContext.Request.Path
+            Instance = httpContext.Request.Path,
+            Status = StatusCodes.Status500InternalServerError,
+            Title = "Internal Server Error",
+            Detail = "Une erreur inattendue s'est produite."
         };
 
         if (exception is BaseException baseException)
         {
-            httpContext.Response.StatusCode = baseException.StatusCode;
+            statusCode = baseException.StatusCode;
             problemDetails.Title = baseException.GetType().Name;
             problemDetails.Status = baseException.StatusCode;
             problemDetails.Detail = baseException.Message;
@@ -33,14 +35,17 @@ public class GlobalExceptionHandler : IExceptionHandler
             {
                 problemDetails.Extensions.Add("errors", validationException.Errors);
             }
+            
+            _logger.LogWarning("Handled Exception: {Method} {Path} returned {StatusCode}. Message: {Message}", 
+                httpContext.Request.Method, httpContext.Request.Path, statusCode, exception.Message);
         }
         else
         {
-            httpContext.Response.StatusCode = StatusCodes.Status500InternalServerError;
-            problemDetails.Title = "Internal Server Error";
-            problemDetails.Status = StatusCodes.Status500InternalServerError;
-            problemDetails.Detail = "Une erreur inattendue s'est produite.";
+            _logger.LogCritical(exception, "UNHANDLED 500 ERROR: {Method} {Path} failed. Message: {Message}. StackTrace: {StackTrace}", 
+                httpContext.Request.Method, httpContext.Request.Path, exception.Message, exception.StackTrace);
         }
+
+        httpContext.Response.StatusCode = statusCode;
 
         await httpContext.Response.WriteAsJsonAsync(problemDetails, cancellationToken);
 

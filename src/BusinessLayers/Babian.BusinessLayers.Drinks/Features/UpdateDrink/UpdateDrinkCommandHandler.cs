@@ -27,11 +27,23 @@ public class UpdateDrinkCommandHandler : IRequestHandler<UpdateDrinkCommand, boo
             throw new ForbiddenException("Vous n'êtes pas propriétaire de cette boisson.");
 
         // 2. Update entity (Prices only)
+        drink.RowVersion = request.RowVersion; // For concurrency check
         drink.BasePrice = request.BasePrice;
         drink.MinPrice = request.MinPrice;
         drink.MaxPrice = request.MaxPrice;
+        
+        // Rotate version
+        drink.RowVersion = Guid.NewGuid();
 
-        await _drinkRepository.UpdateAsync(drink, cancellationToken);
+        try
+        {
+            await _drinkRepository.UpdateAsync(drink, cancellationToken);
+        }
+        catch (Microsoft.EntityFrameworkCore.DbUpdateConcurrencyException)
+        {
+            throw new ConflictException("La boisson a été modifiée par un autre utilisateur (ou par le système de prix). Veuillez rafraîchir.");
+        }
+
         return true;
     }
 }
