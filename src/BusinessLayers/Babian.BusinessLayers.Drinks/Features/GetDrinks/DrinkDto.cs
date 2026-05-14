@@ -18,5 +18,6 @@ public record DrinkDto(
     Guid OwnerId,
     Guid? MarketSessionId,
     Guid GlobalDrinkId,
+    Guid RowVersion,
     DateTime CreatedAt
 );

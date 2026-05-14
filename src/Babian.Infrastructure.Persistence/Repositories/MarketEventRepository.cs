@@ -50,7 +50,15 @@ public class MarketEventRepository : IMarketEventRepository
     public async Task UpdateAsync(MarketEvent marketEvent, CancellationToken cancellationToken)
     {
         _context.MarketEvents.Update(marketEvent);
-        await _context.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await _context.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            _context.Entry(marketEvent).State = EntityState.Detached;
+            throw;
+        }
     }
 
     public async Task DeleteAsync(Guid id, CancellationToken cancellationToken)
@@ -66,6 +74,7 @@ public class MarketEventRepository : IMarketEventRepository
     public async Task<List<MarketEvent>> GetByBarmanIdAsync(Guid barmanId, CancellationToken cancellationToken)
     {
         return await _context.MarketEvents
+            .AsNoTracking()
             .Where(x => x.BarmanId == barmanId)
             .OrderByDescending(x => x.StartAt)
             .ToListAsync(cancellationToken);

@@ -1,4 +1,6 @@
 using Babian.Infrastructure.Persistence;
+using Babian.Service.Hubs;
+using Babian.Service.Services;
 using Babian.Infrastructure.Persistence.Repositories;
 using Babian.Domain.Interfaces;
 using Babian.BusinessLayers.MarketEngine.Services;
@@ -18,8 +20,22 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Babian.Service.Middlewares;
 using FluentValidation;
+using Serilog;
+using Serilog.Events;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Configuration Serilog
+Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Information()
+    .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
+    .Enrich.FromLogContext()
+    .Enrich.WithThreadId()
+    .Enrich.WithEnvironmentName()
+    .WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj} {Properties:j}{NewLine}{Exception}")
+    .CreateLogger();
+
+builder.Host.UseSerilog();
 
 // CORS — origines lues depuis Cors:AllowedOrigins (appsettings) ou env ALLOWED_ORIGINS (séparateur ';'), fallback http://localhost:3000
 var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
@@ -32,7 +48,8 @@ builder.Services.AddCors(options =>
     {
         policy.WithOrigins(allowedOrigins)
               .AllowAnyHeader()
-              .AllowAnyMethod();
+              .AllowAnyMethod()
+              .AllowCredentials();
     });
 });
 
@@ -84,6 +101,8 @@ var jwtSettings = builder.Configuration.GetSection("JwtSettings");
 var secretKey = jwtSettings["SecretKey"] ?? "vibe_code_babian_secret_key_extremely_long_and_secure_2026";
 var key = Encoding.ASCII.GetBytes(secretKey);
 
+builder.Services.AddSignalR();
+
 builder.Services.AddAuthentication(x =>
 {
     x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -103,7 +122,23 @@ builder.Services.AddAuthentication(x =>
         ValidAudience = jwtSettings["Audience"],
         ClockSkew = TimeSpan.Zero
     };
+    
+    x.Events = new JwtBearerEvents
+    {
+        OnMessageReceived = context =>
+        {
+            var accessToken = context.Request.Query["access_token"];
+            var path = context.HttpContext.Request.Path;
+            if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs/market"))
+            {
+                context.Token = accessToken;
+            }
+            return Task.CompletedTask;
+        }
+    };
 });
+
+
 
 // Infrastructure - Database
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -132,6 +167,7 @@ builder.Services.AddScoped<IMarketSimulationService, MarketSimulationService>();
 builder.Services.AddScoped<IPriceRankingService, PriceRankingService>();
 builder.Services.AddScoped<IPriceCalculationService, PriceCalculationService>();
 builder.Services.AddScoped<IMarketEventApplier, MarketEventApplier>();
+builder.Services.AddScoped<IMarketNotificationService, MarketNotificationService>();
 
 // Configure MediatR across all business layer assemblies
 builder.Services.AddMediatR(cfg => {
@@ -175,11 +211,28 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseExceptionHandler();
-app.UseHttpsRedirection();
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
 app.UseCors("FrontendPolicy");
+
+// Correlation ID Middleware
+app.Use(async (context, next) =>
+{
+    var correlationId = context.Request.Headers["X-Correlation-Id"].FirstOrDefault() 
+                       ?? Guid.NewGuid().ToString();
+    context.Response.Headers["X-Correlation-Id"] = correlationId;
+    using (Serilog.Context.LogContext.PushProperty("CorrelationId", correlationId))
+    {
+        await next();
+    }
+});
+
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+app.MapHub<MarketHub>("/hubs/market");
 
 app.Run();
 

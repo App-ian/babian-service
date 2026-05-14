@@ -21,6 +21,7 @@ public class DrinkRepository : IDrinkRepository
     public async Task<GlobalDrink?> GetGlobalDrinkByIdAsync(Guid id, CancellationToken cancellationToken)
     {
         return await _context.GlobalDrinks
+            .AsNoTracking()
             .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
     }
 
@@ -39,7 +40,15 @@ public class DrinkRepository : IDrinkRepository
     public async Task UpdateAsync(Drink drink, CancellationToken cancellationToken)
     {
         _context.Drinks.Update(drink);
-        await _context.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await _context.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            _context.Entry(drink).State = EntityState.Detached;
+            throw;
+        }
     }
 
     public async Task<Drink?> GetByIdAsync(Guid id, CancellationToken cancellationToken)

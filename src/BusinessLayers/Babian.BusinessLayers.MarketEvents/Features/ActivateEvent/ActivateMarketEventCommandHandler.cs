@@ -13,15 +13,18 @@ public class ActivateMarketEventCommandHandler : IRequestHandler<ActivateMarketE
     private readonly IMarketEventRepository _repository;
     private readonly IMarketSessionRepository _sessionRepository;
     private readonly IMarketConfigRepository _configRepository;
+    private readonly IMarketNotificationService _notificationService;
 
     public ActivateMarketEventCommandHandler(
         IMarketEventRepository repository, 
         IMarketSessionRepository sessionRepository,
-        IMarketConfigRepository configRepository)
+        IMarketConfigRepository configRepository,
+        IMarketNotificationService notificationService)
     {
         _repository = repository ?? throw new ArgumentNullException(nameof(repository));
         _sessionRepository = sessionRepository ?? throw new ArgumentNullException(nameof(sessionRepository));
         _configRepository = configRepository ?? throw new ArgumentNullException(nameof(configRepository));
+        _notificationService = notificationService;
     }
 
     public async Task<MarketEvent> Handle(ActivateMarketEventCommand request, CancellationToken cancellationToken)
@@ -70,6 +73,8 @@ public class ActivateMarketEventCommandHandler : IRequestHandler<ActivateMarketE
         };
 
         await _repository.AddAsync(activeEvent, cancellationToken);
+
+        await _notificationService.NotifyEventAsync(activeEvent.BarmanId, $"L'événement '{activeEvent.Name}' a été activé !", new { activeEvent.Id, activeEvent.Status });
 
         return activeEvent;
     }

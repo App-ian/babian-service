@@ -19,6 +19,7 @@ public class MarketConfigRepository : IMarketConfigRepository
     public async Task<MarketConfig?> GetByBarmanIdAsync(Guid barmanId, CancellationToken cancellationToken)
     {
         return await _context.MarketConfigs
+            .AsNoTracking()
             .FirstOrDefaultAsync(x => x.BarmanId == barmanId, cancellationToken);
     }
 
@@ -31,6 +32,14 @@ public class MarketConfigRepository : IMarketConfigRepository
     public async Task UpdateAsync(MarketConfig config, CancellationToken cancellationToken)
     {
         _context.MarketConfigs.Update(config);
-        await _context.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await _context.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            _context.Entry(config).State = EntityState.Detached;
+            throw;
+        }
     }
 }

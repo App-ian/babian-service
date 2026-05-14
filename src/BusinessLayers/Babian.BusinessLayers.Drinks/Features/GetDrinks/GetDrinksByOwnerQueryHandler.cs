@@ -36,6 +36,7 @@ public class GetDrinksByOwnerQueryHandler : IRequestHandler<GetDrinksByOwnerQuer
             d.OwnerId,
             d.MarketSessionId,
             d.GlobalDrinkId,
+            d.RowVersion,
             d.CreatedAt
         )).ToList();
     }

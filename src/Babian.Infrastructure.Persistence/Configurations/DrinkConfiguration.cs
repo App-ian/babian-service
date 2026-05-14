@@ -52,6 +52,10 @@ public class DrinkConfiguration : IEntityTypeConfiguration<Drink>
         builder.Property(x => x.Volume)
             .HasColumnName("volume");
 
+        builder.Property(x => x.RowVersion)
+            .HasColumnName("row_version")
+            .IsConcurrencyToken();
+
         builder.Property(x => x.Category)
             .HasColumnName("category");
 

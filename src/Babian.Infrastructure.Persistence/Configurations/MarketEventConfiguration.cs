@@ -30,5 +30,11 @@ public class MarketEventConfiguration : IEntityTypeConfiguration<MarketEvent>
         builder.Property(x => x.MarketSessionId)
             .HasColumnName("market_session_id")
             .IsRequired(false);
+
+        // Performance Indexes
+        builder.HasIndex(x => x.Status);
+        builder.HasIndex(x => x.MarketSessionId);
+        builder.HasIndex(x => x.StartAt);
+        builder.HasIndex(x => x.BarmanId);
     }
 }
